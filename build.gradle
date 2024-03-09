@@ -1,0 +1,119 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'io.github.lognet.grpc-spring-boot' version '5.0.0'
+    id 'maven-publish'
+    id 'com.google.protobuf' version '0.9.4'
+
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+configurations{
+    compileOnly{
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://maven.pkg.github.com/amraaone/hello-grpc"
+        credentials {
+            username = "amraaone"
+            password = "eromreveroF11*a"
+        }
+    }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.0")
+}
+
+bootJar{
+    mainClass = 'org.example.hellogrpc.HelloGrpcApplication'
+    archiveFileName = 'hello-grpc.jar'
+}
+
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // dapr
+    implementation 'io.dapr:dapr-sdk:1.10.0'
+
+    // grpc
+    implementation 'com.google.protobuf:protobuf-java:3.25.3'
+    implementation 'com.google.protobuf:protobuf-java-util:3.15.8'
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
+
+sourceSets {
+    main{
+        java{
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf: 3.25.1'
+    }
+    plugins {
+        grpc{
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.59.0'
+        }
+    }
+    generateProtoTasks{
+        all()*.plugins {
+            grpc{}
+        }
+    }
+}
+
+task protobufJar(type: Jar, dependsOn: classes){
+    version '0.0.1'
+    includeEmptyDirs(false)
+    from sourceSets.main.output
+    from('src/main/'){
+        include 'proto/**/*'
+    }
+    include "**\\org\\example\\hellogrpc\\**\\*"
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/amraaone/hello-grpc")
+            credentials {
+                username = "amraaone"
+                password = "eromreveroF11*a"
+            }
+        }
+    }
+    publications {
+        protobuf(MavenPublication){
+            groupId = 'org.example.hellogrpc.protobuf'
+            artifactId = 'hello_protobuf'
+            version = '0.0.1'
+            artifact protobufJar
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

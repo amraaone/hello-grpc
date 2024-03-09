@@ -100,7 +100,7 @@ publishing {
             url = uri("https://maven.pkg.github.com/amraaone/hello-grpc")
             credentials {
                 username = "amraaone"
-                password = "eromreveroF11*a"
+                password = "Genesis1o1"
             }
         }
     }

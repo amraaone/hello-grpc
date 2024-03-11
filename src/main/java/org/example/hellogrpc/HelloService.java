@@ -4,20 +4,22 @@ import io.grpc.Grpc;
 import io.grpc.InsecureServerCredentials;
 import io.grpc.Server;
 import io.grpc.stub.StreamObserver;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class HelloService {
 
-  private static final Logger logger = LoggerFactory.getLogger(
-    HelloService.class
-  );
   private Server server;
 
-  public void start(int port) throws IOException {
+  @Value("${grpc.port}")
+  private int port;
+
+  @PostConstruct
+  public void start() throws IOException {
     server =
       Grpc
         .newServerBuilderForPort(port, InsecureServerCredentials.create())
@@ -26,25 +28,20 @@ public class HelloService {
         .build()
         .start();
 
-    logger.info("Server started, listening on " + port);
-
     Runtime
       .getRuntime()
       .addShutdownHook(
         new Thread(() -> {
-          logger.error(
-            "*** shutting down gRPC server since JVM is shutting down"
-          );
           try {
             HelloService.this.stop();
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
-          logger.error("*** server shut down");
         })
       );
   }
 
+  @PreDestroy
   public void stop() throws InterruptedException {
     if (server != null) {
       server.shutdown().awaitTermination();
@@ -64,7 +61,6 @@ public class HelloService {
       HelloRequest req,
       StreamObserver<HelloReply> responseObserver
     ) {
-      logger.info("Greet to " + req.getName());
       HelloReply reply = HelloReply
         .newBuilder()
         .setMessage("Hello " + req.getName())

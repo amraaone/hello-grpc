@@ -99,8 +99,8 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/amraaone/hello-grpc")
             credentials {
-                username = "amraaone"
-                password = "Genesis1o1"
+                username = System.getenv("GPR_USERNAME")
+                password = System.getenv("GPR_PASSWORD")
             }
         }
     }
